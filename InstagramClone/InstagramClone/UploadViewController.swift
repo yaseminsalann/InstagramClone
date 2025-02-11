@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import FirebaseStorage
 
 class UploadViewController: UIViewController, UIImagePickerControllerDelegate & UINavigationControllerDelegate {
     
@@ -34,7 +35,46 @@ class UploadViewController: UIViewController, UIImagePickerControllerDelegate & 
         self.dismiss(animated: true, completion: nil)
     }
 
+    func makeAlert(title: String, message: String) {
+        let alertController = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        let okAction = UIAlertAction(title: "OK", style: .default, handler: nil)
+        alertController.addAction(okAction)
+        present(alertController, animated: true, completion: nil)
+    }
     @IBAction func uploadClickedButton(_ sender: Any) {
+        //galeriden seçilem resimin firebase stora kayıt edilmesi.
+        let storage = Storage.storage()
+        let storageReference = storage.reference()
+        let mediaFolder = storageReference.child("media")
+        
+        if let data = imageView.image?.jpegData(compressionQuality: 0.5)
+            {
+            let uuid = UUID().uuidString
+            //image storage e kayıt edilmesi
+            let mediaReference = mediaFolder.child("\(uuid).jpg")
+            mediaReference.putData(data, metadata: nil) { (metadata, error) in
+                if  error != nil {
+                    print("Image uploaded error!")
+                    self.makeAlert(title: "Error!", message: error?.localizedDescription ?? "Error!")
+                }
+                else{
+                    print("Image uploaded successfully!")
+                    //kayıt işlemi başarılı ise image url ulaşılması
+                    mediaReference.downloadURL() { (url, error) in
+                        if  error == nil {
+                            let imageUrl = url?.absoluteString ?? ""
+                            print(imageUrl)
+                        }
+                        else{
+                            print("Image uploaded error!")
+                        }
+                    }
+                }
+                
+                
+            }
+        }
+        
     }
     
 }
